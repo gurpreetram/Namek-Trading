@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #090C10;
+  --bg2: #0F1319;
+  --bg3: #161B24;
+  --bg4: #1E2430;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #E9EDF5;
+  --text2: #9BA5BD;
+  --text3: #5C6478;
+
+  /* Sharper, more saturated gain/loss colors — matching real exchange-terminal
+     convention (NSE green, a clean alert red) rather than a soft pastel pair. */
+  --green: #00D964;
+  --green-bg: rgba(0,217,100,0.09);
+  --green-border: rgba(0,217,100,0.28);
+  --red: #FF3B47;
+  --red-bg: rgba(255,59,71,0.09);
+  --red-border: rgba(255,59,71,0.28);
+
+  --blue: #4D9EFF;
+  --blue-bg: rgba(77,158,255,0.10);
+  --amber: #FFB23E;
+  --amber-bg: rgba(255,178,62,0.10);
+  --purple: #A78BFA;
+  --purple-bg: rgba(167,139,250,0.10);
+
+  /* Single dedicated "live" accent — distinct from gain/loss, used only for
+     scanning/live-status indicators so it never competes visually with
+     actual price direction colors. */
+  --live: #2DE2E6;
+  --live-bg: rgba(45,226,230,0.09);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+#root { min-height: 100vh; }
+
+/* All numeric data (prices, percentages, scores) uses tabular monospace —
+   the single most "real trading terminal" typographic choice available:
+   digits align into columns the way they do on an actual exchange feed,
+   rather than a proportional font where "1" and "8" take different widths. */
+.num, .numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+button { font-family: inherit; cursor: pointer; }
+input { font-family: inherit; }
+
+.green { color: var(--green); }
+.red { color: var(--red); }
+.blue { color: var(--blue); }
+.amber { color: var(--amber); }
+.purple { color: var(--purple); }
+
+/* Visible keyboard focus, kept even amid the visual refresh — accessibility
+   floor per the design skill's restraint guidance, not optional polish. */
+:focus-visible {
+  outline: 2px solid var(--live);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   SIGNATURE MOTION — used deliberately, not scattered everywhere.
+   ============================================================ */
+
+/* The live-status pulse: a single breathing dot, used for "scanning" and
+   "live" indicators. This is the one signature motion of the whole app —
+   evokes a radar/scanner sweep, fitting for a tool whose entire job is
+   continuously scanning 500 stocks. */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--live-bg); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 5px var(--live-bg); }
+}
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+/* A subtle horizontal scan-line sweep across the Market Direction banner
+   while a scan is actively running — the one "orchestrated moment" per the
+   design skill's guidance, not a constant background effect. */
+@keyframes scan-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.scan-sweep-active {
+  position: relative;
+  overflow: hidden;
+}
+.scan-sweep-active::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--live-bg), transparent);
+  animation: scan-sweep 2.4s linear infinite;
+  pointer-events: none;
+}
+
+/* New Top Opportunity / alert cards entering — a single deliberate
+   slide+fade, not a bounce or scale-pop. Real terminals don't bounce. */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card-enter {
+  animation: card-enter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Price/score flash when a tracked number updates — brief tint, not a
+   color-cycling rainbow. Direction-aware (green flash on increase, red on
+   decrease) applied via JS by toggling these classes momentarily. */
+@keyframes flash-up {
+  0% { background-color: var(--green-bg); }
+  100% { background-color: transparent; }
+}
+@keyframes flash-down {
+  0% { background-color: var(--red-bg); }
+  100% { background-color: transparent; }
+}
+.flash-up { animation: flash-up 0.9s ease-out; }
+.flash-down { animation: flash-down 0.9s ease-out; }
+
+/* Progress bar fill — real motion tied to actual scan progress, eased
+   rather than linear so it feels responsive, not metronomic. */
+.progress-fill {
+  transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
